@@ -1,0 +1,10 @@
+-- Remap : as ;
+-- This makes it easier to save (;w) a file
+vim.keymap.set('n', ';', ':')
+vim.keymap.set('n', ';;', ';')
+
+-- Split keybinds
+vim.keymap.set('n', '<leader>ph', '<cmd>split<CR>', { desc = 'Open horizontal split' })
+vim.keymap.set('n', '<leader>pv', '<cmd>vsplit<CR>', { desc = 'Open vertical split' })
+vim.keymap.set('n', '<leader>pH', '<cmd>split<CR><cmd>term<CR>', { desc = 'Open horizontal terminal split' })
+vim.keymap.set('n', '<leader>pV', '<cmd>vsplit<CR><cmd>term<CR>', { desc = 'Open vertical terminal split' })
