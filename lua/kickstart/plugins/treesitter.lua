@@ -17,6 +17,15 @@ return {
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
+    config = function(_, opts)
+      local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+      parser_config.cpp.install_info = {
+        url = '~/dev/tree-sitter-cpp',
+        files = { 'src/scanner.c', 'src/parser.c' },
+        requires_generate_from_grammar = false,
+      }
+      require('nvim-treesitter.configs').setup(opts)
+    end
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
     --

@@ -7,7 +7,6 @@ return {
       -- Snippet Engine
       {
         'L3MON4D3/LuaSnip',
-        version = '2.*',
         build = (function()
           -- Build Step is needed for regex support in snippets.
           -- This step is not supported in many windows environments.
@@ -21,46 +20,82 @@ return {
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
           -- {
-          --   'rafamadriz/friendly-snippets',
+          --   'kaarmu/typst.vim',
+          --   ft = 'typst',
+          --   lazy = false,
           --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          --     vim.g.typst_conceal = 1
+          --   end
+          -- }
         },
-        opts = {},
+        opts = {
+          history = true, -- keep around last snippet local to jump back
+          enable_autosnippets = true,
+          store_selection_keys = "<Tab>",
+        },
+        config = function(_, opts)
+          require("luasnip").setup(opts)
+          require("luasnip.loaders.from_lua").lazy_load({ paths = { "./LuaSnip" } })
+        end,
+        keys = {
+          {
+            "<C-K>",
+            function()
+              require("luasnip").expand()
+            end,
+            silent = true,
+            mode = "i"
+          },
+          {
+            "<C-L>",
+            function()
+              require("luasnip").jump(1)
+            end,
+            silent = true,
+            mode = { "i", "s" }
+          },
+          {
+            "<C-J>",
+            function()
+              require("luasnip").jump(-1)
+            end,
+            silent = true,
+            mode = { "i", "s" }
+          },
+          {
+            "<C-E>",
+            function()
+              local ls = require("luasnip")
+              if ls.choice_active() then
+                ls.change_choice(1)
+              end
+            end,
+            silent = true,
+            mode = { "i", "s" },
+          },
+        },
       },
       'folke/lazydev.nvim',
+      'fang2hou/blink-copilot',
+      -- 'milanglacier/minuet-ai.nvim'
     },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
     opts = {
       keymap = {
-        -- 'default' (recommended) for mappings similar to built-in completions
-        --   <c-y> to accept ([y]es) the completion.
-        --    This will auto-import if your LSP supports it.
-        --    This will expand snippets if the LSP sent a snippet.
-        -- 'super-tab' for tab to accept
-        -- 'enter' for enter to accept
-        -- 'none' for no mappings
-        --
-        -- For an understanding of why the 'default' preset is recommended,
-        -- you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        --
-        -- All presets have the following mappings:
-        -- <tab>/<s-tab>: move to right/left of your snippet expansion
-        -- <c-space>: Open menu or open docs if already open
-        -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
-        -- <c-e>: Hide menu
-        -- <c-k>: Toggle signature help
-        --
-        -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
-
-        -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-        --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+        preset = 'none',
+        ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+        ['<C-n>'] = { 'select_next' },
+        ['<C-p>'] = { 'select_prev' },
+        ['<C-y>'] = { 'select_and_accept' },
+        ['<C-e>'] = { 'cancel' },
       },
 
       appearance = {
@@ -73,12 +108,25 @@ return {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
         documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        trigger = { prefetch_on_insert = false }
       },
 
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
+        default = { 'lsp', 'path', 'snippets', 'lazydev', 'copilot' },
         providers = {
-          lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+          lazydev = { module = 'lazydev.integrations.blink' },
+          copilot = {
+            name = "copilot",
+            module = "blink-copilot",
+            async = true,
+          },
+          -- minuet = {
+          --   name = 'minuet',
+          --   module = 'minuet.blink',
+          --   async = true,
+          --   timeout_ms = 3000,
+          --   score_offset = 50,
+          -- }
         },
       },
 

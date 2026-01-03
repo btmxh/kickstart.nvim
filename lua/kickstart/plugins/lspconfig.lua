@@ -21,6 +21,7 @@ return {
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
+      'barreiroleo/ltex-extra.nvim',
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -121,6 +122,19 @@ return {
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+          -- tinymist.pinMain
+          if client and client.name == 'tinymist' then
+            map('<leader>gp', function()
+              client:exec_cmd({
+                title = 'tinymist/pinMain',
+                command = 'tinymist.pinMain',
+                arguments = {
+                  vim.api.nvim_buf_get_name(0)
+                }
+              })
+            end, "Pin main Typst file")
+          end
+
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
@@ -200,13 +214,12 @@ return {
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-      local lsp = require 'lspconfig'
       local servers = {
         clangd = {},
         gopls = {},
         basedpyright = {},
         ts_ls = {
-          root_dir = lsp.util.root_pattern('package.json'),
+          root_markers = { "package.json" },
           single_file_support = false,
         },
         eslint = {},
@@ -217,9 +230,6 @@ return {
             root_dir = "-",
             formatterMode = "typstyle",
           },
-          root_dir = function()
-            return vim.fn.getcwd()
-          end,
         },
         texlab = {},
         lemminx = {},
@@ -229,10 +239,38 @@ return {
         emmet_language_server = {},
         cssls = {},
         bashls = {},
-        cmake = {},
-        denols = {
-          root_dir = lsp.util.root_pattern("deno.json", "deno.jsonc"),
+        tailwindcss = {},
+        -- harper_ls = {},
+        mbake = {},
+        neocmake = {
+          cmd = { "neocmakelsp", "--stdio" },
+          filetypes = { "cmake" },
+          single_file_support = true, -- suggested
+          on_attach = on_attach,      -- on_attach is the on_attach function you defined
+          init_options = {
+            format = {
+              enable = true
+            },
+            lint = {
+              enable = true
+            },
+            scan_cmake_in_package = true -- default is true
+          }
         },
+        slangd = {},
+        -- ltex_plus = {
+        --   on_attach = function(client, bufnr)
+        --     require("ltex_extra").setup {}
+        --   end,
+        --   settings = {
+        --     ltex = {
+        --       language = "en-US",
+        --     },
+        --   }
+        -- },
+        -- denols = {
+        --   root_markers = { "deno.json", "deno.jsonc" },
+        -- },
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -260,9 +298,8 @@ return {
 
       for server_name, conf_server in pairs(servers) do
         local server = conf_server or {}
-        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-        server.capabilities = vim.tbl_deep_extend('force', {}, fold_capabilities, server.capabilities or {})
-        lsp[server_name].setup(server or {})
+        vim.lsp.config(server_name, server)
+        vim.lsp.enable(server_name)
       end
     end,
   },
